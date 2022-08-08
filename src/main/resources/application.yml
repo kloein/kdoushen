@@ -1,0 +1,15 @@
+spring:
+    datasource:
+        url: jdbc:mysql://localhost:3306/kdoushen?characterEncoding=utf-8&serverTimezone=UTC
+        username: root
+        password: 123456
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    transaction:
+      default-timeout: 3
+server:
+  port: 6666
+mybatis-plus:
+  configuration:
+      log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+
