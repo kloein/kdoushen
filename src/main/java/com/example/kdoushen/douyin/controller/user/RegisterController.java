@@ -52,8 +52,8 @@ public class RegisterController {
                 log.info("用户注册失败：用户名已存在");
             } else {
                 //用户名合法，在t_user中生成对应用户信息
-                String token = TokenUtil.token(username);
                 User user = new User();
+                String token = TokenUtil.token(username,user.getUserId());
                 user.setUserName(username);
                 String md5Password= DigestUtils.md5DigestAsHex(password.getBytes());
                 user.setPassword(md5Password);
@@ -76,4 +76,6 @@ public class RegisterController {
         }
         return JsonUtil.builder2Json(responseBuilder);
     }
+
+
 }

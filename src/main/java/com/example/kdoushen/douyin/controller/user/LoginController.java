@@ -44,7 +44,7 @@ public class LoginController {
             if (userServiceOne != null) {//登录成功
                 responseBuilder.setStatusCode(0);
                 responseBuilder.setUserId(userServiceOne.getUserId());
-                String token = TokenUtil.token(username);
+                String token = TokenUtil.token(username,userServiceOne.getUserId());
                 responseBuilder.setToken(token);
                 log.info("用户登录,uid:"+userServiceOne.getUserId());
             } else {//密码错误

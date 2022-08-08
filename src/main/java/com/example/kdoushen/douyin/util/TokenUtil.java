@@ -16,12 +16,16 @@ public class TokenUtil {
 
     private static final Logger log= LoggerFactory.getLogger(TokenUtil.class);
     //设置过期时间
-    private static final long EXPIRE_DATE=30*60*1000;
+    private static final long EXPIRE_DATE=7*24*60*60*1000;
     //token秘钥
     private static final String TOKEN_SECRET = "ZCfasfhuaUUHufguGuwu2020BQWE";
 
-    public static String token (String username){
-
+    /**
+     * 根据用户名生成token
+     * @param username
+     * @return
+     */
+    public static String token (String username,Long userId){
         String token = "";
         try {
             //过期时间
@@ -36,6 +40,7 @@ public class TokenUtil {
             token = JWT.create()
                     .withHeader(header)
                     .withClaim("username",username)
+                    .withClaim("userId", userId.toString())
                     .withExpiresAt(date)
                     .sign(algorithm);
         }catch (Exception e){
@@ -44,12 +49,11 @@ public class TokenUtil {
         }
         return token;
     }
-
+    /**
+     * @desc   验证token，通过返回true
+     * @params [token]需要校验的串
+     **/
     public static boolean verify(String token){
-        /**
-         * @desc   验证token，通过返回true
-         * @params [token]需要校验的串
-         **/
         try {
             Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
             JWTVerifier verifier = JWT.require(algorithm).build();
@@ -61,5 +65,16 @@ public class TokenUtil {
             e.printStackTrace();
             return  false;
         }
+    }
+
+    public static String getTokenPayload(String token,String chaimName) {
+        try {
+            DecodedJWT decodedJWT = JWT.decode(token);
+            return decodedJWT.getClaim(chaimName).asString();
+        }catch (Exception e){
+            log.error("token解析未非法！");
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -1,5 +1,8 @@
 HELP.md
 target/
+videos/
+covers/
+
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
