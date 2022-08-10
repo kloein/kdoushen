@@ -5,6 +5,7 @@ import com.example.kdoushen.douyin.controller.user.LoginController;
 import com.example.kdoushen.douyin.service.publish.UploadService;
 import com.example.kdoushen.douyin.service.publish.VideoService;
 import com.example.kdoushen.douyin.util.JsonUtil;
+import com.example.kdoushen.douyin.util.SystemUtil;
 import com.example.kdoushen.douyin.util.TokenUtil;
 import org.bytedeco.javacv.FrameGrabber;
 import org.checkerframework.checker.units.qual.A;
@@ -14,11 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -51,7 +55,7 @@ public class UploadController {
 
     @PostMapping("/douyin/publish/action/")
     @ResponseBody
-    public String upload(MultipartFile data,HttpServletRequest request) throws IOException, FrameGrabber.Exception {
+    public String upload(MultipartFile data, HttpServletRequest request) throws IOException, FrameGrabber.Exception {
         Action.douyin_publish_action_response.Builder responseBuilder = Action.douyin_publish_action_response.newBuilder();
         String token = request.getParameter("token");
 
@@ -60,17 +64,23 @@ public class UploadController {
             responseBuilder.setStatusCode(1);
             responseBuilder.setStatusMsg("token非法!");
         } else {
+            //获取static文件夹所在路径,在window系统下以/开头要去除
+            String staticPath = ResourceUtils.getURL("classpath:").getPath();
+            if (SystemUtil.isWindows()) {
+                staticPath=staticPath.substring(1);
+            }
             String title = request.getParameter("title");
             //通过token获取用户id
             Long userId = Long.parseLong(TokenUtil.getTokenPayload(token, "userId"));
             //生成视频名称
             String filename=UUID.randomUUID().toString();
             //保存视频进本地
-            String videoTargetPath=VIDEO_PATH+ File.separator+filename+DEFAULT_VIDEO_FORMAT;
+            String videoTargetPath=staticPath+VIDEO_PATH+ File.separator+filename+DEFAULT_VIDEO_FORMAT;
+            System.out.println(videoTargetPath);
             uploadService.fetchVideoToFile(videoTargetPath, data);
 
             //保存封面进本地
-            String coverTargetPath=VIDEO_COVER_PATH+File.separator+filename+DEFAULT_IMG_FORMAT;
+            String coverTargetPath=staticPath+VIDEO_COVER_PATH+File.separator+filename+DEFAULT_IMG_FORMAT;
             uploadService.fetchFrameToFile(videoTargetPath, coverTargetPath, FRAME_NUM);
 
             //向mysql中存入视频数据
