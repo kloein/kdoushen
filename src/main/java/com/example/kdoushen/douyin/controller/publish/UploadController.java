@@ -31,6 +31,9 @@ import java.util.UUID;
 public class UploadController {
     private static final Logger log= LoggerFactory.getLogger(UploadController.class);
 
+    @Value("${video-config.ftp-server-path}")
+    private String FTP_SERVER_PATH;
+
     @Value("${video-config.video-save-path}")
     private String VIDEO_PATH;
     @Value("${video-config.frame-num}")
@@ -71,7 +74,9 @@ public class UploadController {
             uploadService.fetchFrameToFile(videoTargetPath, coverTargetPath, FRAME_NUM);
 
             //向mysql中存入视频数据
-            videoService.saveVideoMsg(userId, videoTargetPath, coverTargetPath, title);
+            String ftpVideoPath=FTP_SERVER_PATH+"videos"+File.separator+filename+DEFAULT_VIDEO_FORMAT;
+            String ftpCoverPath=FTP_SERVER_PATH+"covers"+File.separator+filename+DEFAULT_IMG_FORMAT;
+            videoService.saveVideoMsg(userId, ftpVideoPath, ftpCoverPath, title);
             //返回成功
             responseBuilder.setStatusCode(0);
         }

@@ -59,8 +59,11 @@ public class UploadServiceImpl implements UploadService {
             opencv_core.IplImage img = f.image;
             int width = img.width();
             int height = img.height();
-            BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-            bi.getGraphics().drawImage(f.image.getBufferedImage().getScaledInstance(width, height, Image.SCALE_SMOOTH),
+            BufferedImage bi = new BufferedImage(height, width, BufferedImage.TYPE_3BYTE_BGR);
+            //截取出来的图是歪的，旋转九十度
+            BufferedImage targetImage = rotateClockwise90(f.image.getBufferedImage());
+
+            bi.getGraphics().drawImage(targetImage.getScaledInstance(targetImage.getWidth(), targetImage.getHeight(), Image.SCALE_SMOOTH),
                     0, 0, null);
             ff.flush();
             ff.stop();
@@ -69,5 +72,17 @@ public class UploadServiceImpl implements UploadService {
         } catch (Exception e) {
             throw new RuntimeException("转换视频图片异常");
         }
+    }
+
+    //顺时针旋转90度（通过交换图像的整数像素RGB 值）
+    public static BufferedImage rotateClockwise90(BufferedImage bi) {
+        int width = bi.getWidth();
+        int height = bi.getHeight();
+        BufferedImage bufferedImage = new BufferedImage(height, width, bi.getType());
+        for (int i = 0; i < width; i++)
+            for (int j = 0; j < height; j++)
+                //第一个参数未x轴，第二个为y轴
+                bufferedImage.setRGB(height - 1 - j, i , bi.getRGB(i, j));
+        return bufferedImage;
     }
 }

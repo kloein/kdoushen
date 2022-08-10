@@ -1,25 +1,28 @@
 ## 视频配置
 video-config:
+    ##ftpServer地址前缀
+    ftp-server-path: http:\\192.168.1.105:6001\
     ##视频保存路径
-    video-save-path: D:\0softwaresAfter_2022_01_04\IdeaProjects\kdoushen\videos
+    video-save-path: D:\0softwaresAfter_2022_01_04\IdeaProjects\kdoushen\target\classes\static\videos
     ## 视频封面保存路径
-    video-cover-save-path: D:\0softwaresAfter_2022_01_04\IdeaProjects\kdoushen\covers
+    video-cover-save-path: D:\0softwaresAfter_2022_01_04\IdeaProjects\kdoushen\target\classes\static\covers
     ##配置封面截取第几帧
     frame-num: 1
 
 
 spring:
-    datasource:
+  datasource:
         url: jdbc:mysql://localhost:3306/kdoushen?characterEncoding=utf-8&serverTimezone=UTC
         username: root
         password: 123456
         driver-class-name: com.mysql.cj.jdbc.Driver
-    transaction:
-      default-timeout: 3
+  transaction:
+    default-timeout: 3
+
+
 server:
-  port: 6666
+  port: 6001
 mybatis-plus:
   configuration:
       log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-
 

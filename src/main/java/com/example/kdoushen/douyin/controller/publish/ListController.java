@@ -1,17 +1,13 @@
-package com.example.kdoushen.douyin.controller.list;
+package com.example.kdoushen.douyin.controller.publish;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.kdoushen.douyin.bean.protobuf.publish.List;
 import com.example.kdoushen.douyin.bean.publish.Video;
-import com.example.kdoushen.douyin.bean.user.User;
 import com.example.kdoushen.douyin.bean.user.UserMsg;
-import com.example.kdoushen.douyin.controller.publish.UploadController;
 import com.example.kdoushen.douyin.service.publish.VideoService;
 import com.example.kdoushen.douyin.service.user.UserMsgService;
-import com.example.kdoushen.douyin.service.user.UserService;
 import com.example.kdoushen.douyin.util.JsonUtil;
 import com.example.kdoushen.douyin.util.TokenUtil;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +51,7 @@ public class ListController {
             userBuilder.setFollowerCount(user.getFollowerCount());
             userBuilder.setIsFollow(true);//未完善
             //构造返回video_list，在此同时需要查询是否已点赞
-            for (int i = 0; i < videoList.size(); i++) {
+            for (int i = videoList.size()-1; i >=0; i--) {
                 Video video = videoList.get(i);
                 List.Video.Builder videoBuilder = List.Video.newBuilder();
                 videoBuilder.setId(video.getVId());
@@ -70,6 +66,7 @@ public class ListController {
             }
             //构造response
             responseBuilder.setStatusCode(0);
+            log.info("拉取视频成功，用户id："+userId);
         }
         return JsonUtil.builder2Json(responseBuilder);
     }
