@@ -67,6 +67,12 @@ public class TokenUtil {
         }
     }
 
+    /**
+     * 获取token payload中指定的字段
+     * @param token
+     * @param chaimName
+     * @return
+     */
     public static String getTokenPayload(String token,String chaimName) {
         try {
             DecodedJWT decodedJWT = JWT.decode(token);
