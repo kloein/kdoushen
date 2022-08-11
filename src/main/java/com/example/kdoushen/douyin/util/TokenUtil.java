@@ -62,7 +62,6 @@ public class TokenUtil {
             return true;
         }catch (Exception e){
             log.error("token解析未非法！");
-            e.printStackTrace();
             return  false;
         }
     }

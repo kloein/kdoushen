@@ -22,6 +22,11 @@ public class UserMsgController {
     @Autowired
     UserMsgService userMsgService;
 
+    /**
+     * 获取登录用户的各项信息
+     * @param request
+     * @return
+     */
     @GetMapping("/douyin/user")
     @ResponseBody
     public String userMsgController(HttpServletRequest request) {

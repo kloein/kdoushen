@@ -28,6 +28,11 @@ public class RegisterController {
     @Autowired
     UserMsgService userMsgService;
 
+    /**
+     * 用户注册接口
+     * @param request
+     * @return
+     */
     @PostMapping("/douyin/user/register")
     @ResponseBody
     public String userRegister(HttpServletRequest request) {

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 @Controller
 @Transactional
@@ -38,9 +39,14 @@ public class FeedController {
     @Autowired
     GetLatestStrategy feedStrategy;
 
+    /**
+     * 抖音首页返回视频流
+     * @param request
+     * @return
+     */
     @GetMapping("/douyin/feed")
     @ResponseBody
-    public String feed(HttpServletRequest request) {
+    public String feed(HttpServletRequest request) throws InterruptedException {
         Feed.douyin_feed_response.Builder responseBuilder = Feed.douyin_feed_response.newBuilder();
         //获取请求中的数据
         String latest_time_str = request.getParameter("latest_time");
@@ -61,41 +67,55 @@ public class FeedController {
             //查询出部分视频，返回给客户端
             Timestamp timestamp=new Timestamp(latestTime);
             List<Video> videoList = feedService.getVideoByStrategy(feedStrategy, timestamp);
+            CountDownLatch countDownLatch = new CountDownLatch(videoList.size());
             for (int i = 0; i < videoList.size(); i++) {
                 Video video = videoList.get(i);
-                Feed.Video.Builder videoBuilder = Feed.Video.newBuilder();
-                //查询作者信息
-                Feed.User.Builder userBuilder = Feed.User.newBuilder();
-                QueryWrapper<UserMsg> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("uid", video.getUId());
-                UserMsg userMsg = userMsgService.getOne(queryWrapper);
-                //将查询结果放入返回值中
-                userBuilder.setId(userMsg.getUserId());
-                userBuilder.setName(userMsg.getUsername());
-                userBuilder.setFollowCount(userMsg.getFollowCount());
-                userBuilder.setFollowerCount(userMsg.getFollowerCount());
-                userBuilder.setIsFollow(true);//未完善
-                //查询作者信息结束
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Feed.Video.Builder videoBuilder = Feed.Video.newBuilder();
+                            //查询作者信息
+                            Feed.User.Builder userBuilder = Feed.User.newBuilder();
+                            QueryWrapper<UserMsg> queryWrapper = new QueryWrapper<>();
+                            queryWrapper.eq("uid", video.getUId());
+                            UserMsg userMsg = userMsgService.getOne(queryWrapper);
+                            //将查询结果放入返回值中
+                            userBuilder.setId(userMsg.getUserId());
+                            userBuilder.setName(userMsg.getUsername());
+                            userBuilder.setFollowCount(userMsg.getFollowCount());
+                            userBuilder.setFollowerCount(userMsg.getFollowerCount());
+                            userBuilder.setIsFollow(true);//未完善
+                            //查询作者信息结束
 
-                //查询视频信息
-                QueryWrapper<Like> favoriteQuery = new QueryWrapper<>();
-                favoriteQuery.eq("vid", video.getVId());
-                Long favoriteCount=likeService.count(favoriteQuery);
+                            //查询视频信息
+                            QueryWrapper<Like> favoriteQuery = new QueryWrapper<>();
+                            favoriteQuery.eq("vid", video.getVId());
+                            Long favoriteCount=likeService.count(favoriteQuery);
 
-                QueryWrapper<Like> isFavoriteQuery=new QueryWrapper<>();
-                isFavoriteQuery.eq("uid", userId).eq("vid", video.getVId());;
-                boolean isFavorite = likeService.count(isFavoriteQuery)==1?true:false;
-                //设置返回视频信息
-                videoBuilder.setId(video.getVId());
-                videoBuilder.setAuthor(userBuilder);
-                videoBuilder.setPlayUrl(video.getPlayUrl());
-                videoBuilder.setCoverUrl(video.getCoverUrl());
-                videoBuilder.setFavoriteCount(favoriteCount);//已完善
-                videoBuilder.setCommentCount(0);//未完善
-                videoBuilder.setIsFavorite(isFavorite);//已完善
-                videoBuilder.setTitle(video.getTitle());
-                responseBuilder.addVideoList(videoBuilder);
+                            QueryWrapper<Like> isFavoriteQuery=new QueryWrapper<>();
+                            isFavoriteQuery.eq("uid", userId).eq("vid", video.getVId());
+                            ;
+                            boolean isFavorite = likeService.count(isFavoriteQuery)==1?true:false;
+                            //设置返回视频信息
+                            videoBuilder.setId(video.getVId());
+                            videoBuilder.setAuthor(userBuilder);
+                            videoBuilder.setPlayUrl(video.getPlayUrl());
+                            videoBuilder.setCoverUrl(video.getCoverUrl());
+                            videoBuilder.setFavoriteCount(favoriteCount);//已完善
+                            videoBuilder.setCommentCount(0);//未完善
+                            videoBuilder.setIsFavorite(isFavorite);//已完善
+                            videoBuilder.setTitle(video.getTitle());
+                            synchronized (responseBuilder) {
+                                responseBuilder.addVideoList(videoBuilder);
+                            }
+                        }  finally {
+                            countDownLatch.countDown();
+                        }
+                    }
+                }).start();
             }
+            countDownLatch.await();
             responseBuilder.setStatusCode(0);
             if (videoList.size() > 0) {
                 responseBuilder.setNextTime(videoList.get(videoList.size()-1).getPublishTime().getTime());

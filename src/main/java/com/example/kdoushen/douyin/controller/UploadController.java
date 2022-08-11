@@ -46,6 +46,14 @@ public class UploadController {
     @Autowired
     VideoService videoService;
 
+    /**
+     * 登录用户选择视频上传
+     * @param data
+     * @param request
+     * @return
+     * @throws IOException
+     * @throws FrameGrabber.Exception
+     */
     @PostMapping("/douyin/publish/action/")
     @ResponseBody
     public String upload(MultipartFile data, HttpServletRequest request) throws IOException, FrameGrabber.Exception {

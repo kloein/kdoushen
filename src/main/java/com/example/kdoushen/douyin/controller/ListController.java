@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.concurrent.CountDownLatch;
 
 @Controller
 @Transactional
@@ -32,9 +33,14 @@ public class ListController {
     @Autowired
     LikeService likeService;
 
+    /**
+     * 登录用户的视频发布列表
+     * @param request
+     * @return
+     */
     @GetMapping("/douyin/publish/list/")
     @ResponseBody
-    public String listVideo(HttpServletRequest request) {
+    public String listVideo(HttpServletRequest request) throws InterruptedException {
         String token = request.getParameter("token");
         List.douyin_publish_list_response.Builder responseBuilder = List.douyin_publish_list_response.newBuilder();
 
@@ -65,7 +71,7 @@ public class ListController {
                 Long favoriteCount=likeService.count(favoriteQuery);
 
                 QueryWrapper<Like> isFavoriteQuery=new QueryWrapper<>();
-                isFavoriteQuery.eq("uid", userId).eq("vid", video.getVId());;
+                isFavoriteQuery.eq("uid", userId).eq("vid", video.getVId());
                 boolean isFavorite = likeService.count(isFavoriteQuery)==1?true:false;
 
                 //设置视频返回值
@@ -77,11 +83,12 @@ public class ListController {
                 videoBuilder.setCommentCount(0);//未完善
                 videoBuilder.setIsFavorite(isFavorite);//已完善
                 videoBuilder.setTitle(video.getTitle());
+
                 responseBuilder.addVideoList(videoBuilder);
             }
             //构造response
             responseBuilder.setStatusCode(0);
-            log.info("拉取视频成功，用户id："+userId);
+            log.info("拉取用户视频成功，用户id："+userId);
         }
         return JsonUtil.builder2Json(responseBuilder);
     }

@@ -22,6 +22,13 @@ public class LoginController {
     private static final Logger log= LoggerFactory.getLogger(LoginController.class);
     @Autowired
     UserService userService;
+
+    /**
+     * 用户登录接口
+     * @param username
+     * @param password
+     * @return
+     */
     @PostMapping("/douyin/user/login/")
     @ResponseBody
     public String userLogin(String username,String password) {
