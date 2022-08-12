@@ -1,6 +1,5 @@
 package com.example.kdoushen.douyin.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.kdoushen.douyin.bean.Like;
 import com.example.kdoushen.douyin.bean.protobuf.publish.List;
 import com.example.kdoushen.douyin.bean.Video;
@@ -51,10 +50,9 @@ public class ListController {
         } else {
             Long userId = Long.parseLong(request.getParameter("user_id"));
             //从数据库中查询该用户发布的所有视频
-            QueryWrapper<Video> queryByUid = new QueryWrapper<Video>().eq("uid", userId);
-            java.util.List<Video> videoList = videoService.list(queryByUid);
+            java.util.List<Video> videoList = videoService.getUserVideosByUid(userId);
             //查询author信息,并且构造userBuilder
-            UserMsg user = userMsgService.getOne(new QueryWrapper<UserMsg>().eq("uid", userId));
+            UserMsg user = userMsgService.getUserMsgByUid(userId);
             List.User.Builder userBuilder = List.User.newBuilder();
             userBuilder.setId(userId);
             userBuilder.setName(user.getUsername());
@@ -66,13 +64,8 @@ public class ListController {
                 Video video = videoList.get(i);
                 List.Video.Builder videoBuilder = List.Video.newBuilder();
                 //查询视频信息
-                QueryWrapper<Like> favoriteQuery = new QueryWrapper<>();
-                favoriteQuery.eq("vid", video.getVId());
-                Long favoriteCount=likeService.count(favoriteQuery);
-
-                QueryWrapper<Like> isFavoriteQuery=new QueryWrapper<>();
-                isFavoriteQuery.eq("uid", userId).eq("vid", video.getVId());
-                boolean isFavorite = likeService.count(isFavoriteQuery)==1?true:false;
+                Long favoriteCount=likeService.queryFavoriteCountByVid(video.getVId());
+                boolean isFavorite = likeService.queryIsFavoriteByVidAndUid(video.getVId(), video.getUId());
 
                 //设置视频返回值
                 videoBuilder.setId(video.getVId());
@@ -80,7 +73,7 @@ public class ListController {
                 videoBuilder.setPlayUrl(video.getPlayUrl());
                 videoBuilder.setCoverUrl(video.getCoverUrl());
                 videoBuilder.setFavoriteCount(favoriteCount);//已完善
-                videoBuilder.setCommentCount(0);//未完善
+                videoBuilder.setCommentCount(0);//未完善，在此模块中不会显示评论数，因此不必查询
                 videoBuilder.setIsFavorite(isFavorite);//已完善
                 videoBuilder.setTitle(video.getTitle());
 

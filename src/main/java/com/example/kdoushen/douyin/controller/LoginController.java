@@ -1,7 +1,6 @@
 package com.example.kdoushen.douyin.controller;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.kdoushen.douyin.bean.protobuf.user.Login;
 import com.example.kdoushen.douyin.bean.User;
 import com.example.kdoushen.douyin.service.UserService;
@@ -43,11 +42,7 @@ public class LoginController {
             responseBuilder.setStatusMsg("用户密码不合法，请重新输入");
             log.info("用户登录失败：用户密码不合法");
         } else {
-            //从数据库中验证用户名是否已经存在，若是，返回错误，反之成功注册
-            String md5Password = DigestUtils.md5DigestAsHex(password.getBytes());
-            QueryWrapper<User> queryWrapper = new QueryWrapper<User>()
-                    .eq("username", username).eq("password",md5Password);
-            User userServiceOne = userService.getOne(queryWrapper);
+            User userServiceOne = userService.getUserByUsernameAndPassword(username, password);
             if (userServiceOne != null) {//登录成功
                 responseBuilder.setStatusCode(0);
                 responseBuilder.setUserId(userServiceOne.getUserId());

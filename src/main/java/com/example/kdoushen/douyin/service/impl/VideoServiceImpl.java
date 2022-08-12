@@ -1,5 +1,6 @@
 package com.example.kdoushen.douyin.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.kdoushen.douyin.bean.Video;
 import com.example.kdoushen.douyin.dao.VideoMapper;
@@ -7,6 +8,7 @@ import com.example.kdoushen.douyin.service.VideoService;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 
 @Service
@@ -29,5 +31,11 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         video.setPublishTime(new Timestamp(System.currentTimeMillis()+EIGHT_HOUR_DIR_MIL));
         video.setTitle(title);
         save(video);
+    }
+
+    @Override
+    public List<Video> getUserVideosByUid(long uid) {
+        QueryWrapper<Video> queryByUid = new QueryWrapper<Video>().eq("uid", uid);
+        return list(queryByUid);
     }
 }

@@ -1,6 +1,6 @@
 package com.example.kdoushen.douyin.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
 import com.example.kdoushen.douyin.bean.protobuf.user.UserMsg;
 import com.example.kdoushen.douyin.service.UserMsgService;
 import com.example.kdoushen.douyin.util.JsonUtil;
@@ -41,10 +41,7 @@ public class UserMsgController {
         } else {
             //查询出用户数据，放入返回值
             UserMsg.User.Builder userBuilder = UserMsg.User.newBuilder();
-            LambdaQueryWrapper<com.example.kdoushen.douyin.bean.UserMsg> userMsgLambdaQueryWrapper = new LambdaQueryWrapper<com.example.kdoushen.douyin.bean.UserMsg>();
-            userMsgLambdaQueryWrapper.select(com.example.kdoushen.douyin.bean.UserMsg::getUserId, com.example.kdoushen.douyin.bean.UserMsg::getUsername, com.example.kdoushen.douyin.bean.UserMsg::getFollowCount, com.example.kdoushen.douyin.bean.UserMsg::getFollowerCount)
-                    .eq(com.example.kdoushen.douyin.bean.UserMsg::getUserId, user_id);
-            com.example.kdoushen.douyin.bean.UserMsg userMsg = userMsgService.getOne(userMsgLambdaQueryWrapper);
+            com.example.kdoushen.douyin.bean.UserMsg userMsg = userMsgService.getUserMsgByUid(user_id);
 
             if (userMsg == null) {
                 responseBuilder.setStatusCode(1);

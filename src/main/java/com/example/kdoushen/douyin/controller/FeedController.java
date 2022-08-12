@@ -1,10 +1,11 @@
 package com.example.kdoushen.douyin.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.kdoushen.douyin.bean.Comment;
 import com.example.kdoushen.douyin.bean.Like;
 import com.example.kdoushen.douyin.bean.protobuf.feed.Feed;
 import com.example.kdoushen.douyin.bean.Video;
 import com.example.kdoushen.douyin.bean.UserMsg;
+import com.example.kdoushen.douyin.service.CommentService;
 import com.example.kdoushen.douyin.service.LikeService;
 import com.example.kdoushen.douyin.service.impl.FeedServiceImpl;
 import com.example.kdoushen.douyin.service.impl.GetLatestStrategy;
@@ -36,6 +37,8 @@ public class FeedController {
     UserMsgService userMsgService;
     @Autowired
     LikeService likeService;
+    @Autowired
+    CommentService commentService;
 
     @Autowired
     GetLatestStrategy feedStrategy;
@@ -78,9 +81,7 @@ public class FeedController {
                             Feed.Video.Builder videoBuilder = Feed.Video.newBuilder();
                             //查询作者信息
                             Feed.User.Builder userBuilder = Feed.User.newBuilder();
-                            QueryWrapper<UserMsg> queryWrapper = new QueryWrapper<>();
-                            queryWrapper.eq("uid", video.getUId());
-                            UserMsg userMsg = userMsgService.getOne(queryWrapper);
+                            UserMsg userMsg = userMsgService.getUserMsgByUid(video.getUId());
                             //将查询结果放入返回值中
                             userBuilder.setId(userMsg.getUserId());
                             userBuilder.setName(userMsg.getUsername());
@@ -90,21 +91,17 @@ public class FeedController {
                             //查询作者信息结束
 
                             //查询视频信息
-                            QueryWrapper<Like> favoriteQuery = new QueryWrapper<>();
-                            favoriteQuery.eq("vid", video.getVId());
-                            Long favoriteCount=likeService.count(favoriteQuery);
-
-                            QueryWrapper<Like> isFavoriteQuery=new QueryWrapper<>();
-                            isFavoriteQuery.eq("uid", userId).eq("vid", video.getVId());
-                            ;
-                            boolean isFavorite = likeService.count(isFavoriteQuery)==1?true:false;
+                            Long favoriteCount=likeService.queryFavoriteCountByVid(video.getVId());
+                            boolean isFavorite = likeService.queryIsFavoriteByVidAndUid(video.getVId(), video.getUId());
+                            //查询评论数量
+                            long commentCount = commentService.queryCommentCountByVid(video.getVId());
                             //设置返回视频信息
                             videoBuilder.setId(video.getVId());
                             videoBuilder.setAuthor(userBuilder);
                             videoBuilder.setPlayUrl(video.getPlayUrl());
                             videoBuilder.setCoverUrl(video.getCoverUrl());
                             videoBuilder.setFavoriteCount(favoriteCount);//已完善
-                            videoBuilder.setCommentCount(0);//未完善
+                            videoBuilder.setCommentCount(commentCount);//已完善
                             videoBuilder.setIsFavorite(isFavorite);//已完善
                             videoBuilder.setTitle(video.getTitle());
                             synchronized (responseBuilder) {

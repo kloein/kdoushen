@@ -1,6 +1,6 @@
 package com.example.kdoushen.douyin.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
 import com.example.kdoushen.douyin.bean.Comment;
 import com.example.kdoushen.douyin.bean.UserMsg;
 import com.example.kdoushen.douyin.bean.protobuf.extra.first.CommentAction;
@@ -52,15 +52,14 @@ public class CommentController {
             responseBuilder.setStatusMsg("token验证错误!");
             log.error("token验证错误!");
         } else {
-            String user_id = TokenUtil.getTokenPayload(token, "userId");
-            String video_id = request.getParameter("video_id");
+            Long user_id = Long.parseLong(TokenUtil.getTokenPayload(token, "userId"));
+            Long video_id = Long.parseLong(request.getParameter("video_id"));
             String action_type = request.getParameter("action_type");
             //发布评论
             if (action_type.equals("1")) {
                 String comment_text = request.getParameter("comment_text");
                 //查询出用户信息，以封装进评论
-                QueryWrapper<UserMsg> userMsgQueryWrapper = new QueryWrapper<UserMsg>().eq("uid", user_id);
-                UserMsg userMsg = userMsgService.getOne(userMsgQueryWrapper);
+                UserMsg userMsg = userMsgService.getUserMsgByUid(user_id);
                 CommentAction.User.Builder userBuilder = CommentAction.User.newBuilder();
                 userBuilder.setId(userMsg.getUserId());
                 userBuilder.setName(userMsg.getUsername());
@@ -71,8 +70,8 @@ public class CommentController {
                 Comment comment = new Comment();
                 long comment_id = IdUtils.getId(comment);
                 comment.setId(comment_id);
-                comment.setUid(Long.parseLong(user_id));
-                comment.setVid(Long.parseLong(video_id));
+                comment.setUid(user_id);
+                comment.setVid(video_id);
                 comment.setCommentText(comment_text);
                 LocalDateTime now = LocalDateTime.now();
                 comment.setCommentTime(new Timestamp(now.toInstant(ZoneOffset.of("+8")).toEpochMilli()));
@@ -86,11 +85,15 @@ public class CommentController {
                 String formatDate = dateTimeFormatter.format(now);
                 commentBuilder.setCreateDate(formatDate);
                 responseBuilder.setComment(commentBuilder);
+                //同步进redis缓存
+                commentService.addCommentCountInRedis(video_id);
             }
             //删除评论
             if (action_type.equals("2")) {
                 String comment_id = request.getParameter("comment_id");
                 commentService.removeById(comment_id);
+                //同步进redis缓存
+                commentService.reduceCommentCountInRedis(video_id);
             }
             responseBuilder.setStatusCode(0);
         }
@@ -102,10 +105,8 @@ public class CommentController {
     @ResponseBody
     public String commentList(HttpServletRequest request) {
         CommentList.douyin_comment_action_response.Builder responseBuilder = CommentList.douyin_comment_action_response.newBuilder();
-        String video_id = request.getParameter("video_id");
-        QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<Comment>().
-                eq("vid", video_id).orderByDesc("comment_time");
-        List<Comment> comments = commentService.list(commentQueryWrapper);
+        Long video_id = Long.parseLong(request.getParameter("video_id"));
+        List<Comment> comments = commentService.queryCommentsByVid(video_id);
         for (int i = 0; i < comments.size(); i++) {
             Comment comment=comments.get(i);
             CommentList.Comment.Builder commentBuilder = CommentList.Comment.newBuilder();
@@ -113,11 +114,10 @@ public class CommentController {
             commentBuilder.setId(comment.getId());
             commentBuilder.setContent(comment.getCommentText());
             Timestamp commentTime = comment.getCommentTime();
-            String time = "" + commentTime.getMonth() + "-" + commentTime.getDay();
+            String time = "" + (commentTime.getMonth()+1) + "-" + commentTime.getDate();
             commentBuilder.setCreateDate(time);
             //查询User
-            QueryWrapper<UserMsg> userMsgQueryWrapper = new QueryWrapper<UserMsg>().eq("uid", comment.getUid());
-            UserMsg userMsg = userMsgService.getOne(userMsgQueryWrapper);
+            UserMsg userMsg = userMsgService.getUserMsgByUid(comment.getUid());
             CommentList.User.Builder userBuilder = CommentList.User.newBuilder();
             userBuilder.setId(userMsg.getUserId());
             userBuilder.setName(userMsg.getUsername());
@@ -128,8 +128,8 @@ public class CommentController {
             commentBuilder.setUser(userBuilder);
             //将评论信息加入返回值
             responseBuilder.addCommentList(commentBuilder);
-            log.info("拉取视频评论成功，视频id："+video_id);
         }
+        log.info("拉取视频评论成功，视频id："+video_id);
 
         return JsonUtil.builder2Json(responseBuilder);
     }

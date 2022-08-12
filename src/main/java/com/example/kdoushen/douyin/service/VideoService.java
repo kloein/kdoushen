@@ -3,6 +3,8 @@ package com.example.kdoushen.douyin.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.kdoushen.douyin.bean.Video;
 
+import java.util.List;
+
 
 public interface VideoService extends IService<Video> {
     /**
@@ -14,4 +16,8 @@ public interface VideoService extends IService<Video> {
      */
     public void saveVideoMsg(Long uid,String playUrl,String coverUrl,String title);
 
+    /**
+     * 根据用户id获取其发布的视频
+     */
+    public List<Video> getUserVideosByUid(long uid);
 }

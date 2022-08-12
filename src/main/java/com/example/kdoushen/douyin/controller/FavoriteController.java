@@ -1,11 +1,11 @@
 package com.example.kdoushen.douyin.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.kdoushen.douyin.bean.Like;
 import com.example.kdoushen.douyin.bean.UserMsg;
 import com.example.kdoushen.douyin.bean.Video;
 import com.example.kdoushen.douyin.bean.protobuf.extra.first.FavoriteAction;
 import com.example.kdoushen.douyin.bean.protobuf.extra.first.FavoriteList;
+import com.example.kdoushen.douyin.service.CommentService;
 import com.example.kdoushen.douyin.service.LikeService;
 import com.example.kdoushen.douyin.service.UserMsgService;
 import com.example.kdoushen.douyin.service.VideoService;
@@ -52,26 +52,27 @@ public class FavoriteController {
             log.error("点赞视频:token验证错误！");
         } else {//token正确
             //获取所需参数
-            String user_id = TokenUtil.getTokenPayload(token,"userId");
-            String video_id = request.getParameter("video_id");
+            Long user_id = Long.parseLong(TokenUtil.getTokenPayload(token,"userId"));
+            Long video_id = Long.parseLong(request.getParameter("video_id"));
             String action_type = request.getParameter("action_type");
 
-            QueryWrapper<Like> likeQueryWrapper = new QueryWrapper<>();
-            likeQueryWrapper.eq("uid", user_id);
-            likeQueryWrapper.eq("vid", video_id);
-            boolean hasLiked=likeService.count(likeQueryWrapper)==1?true:false;
+            boolean hasLiked=likeService.queryIsFavoriteByVidAndUid(video_id,user_id);
             if (action_type.equals("1") ) {
                 if (!hasLiked) {//先前没赞过才需要操作
                     Like like = new Like();
-                    like.setUId(Long.parseLong(user_id));
-                    like.setVId(Long.parseLong(video_id));
+                    like.setUId(user_id);
+                    like.setVId(video_id);
                     likeService.save(like);
+                    //同步进redis缓存
+                    likeService.addLikeCountInRedis(video_id);
                 }
                 responseBuilder.setStatusCode(0);
                 log.info("用户"+user_id+"对视频"+video_id+"点赞");
             } else if (action_type.equals("2") ) {
                 if (hasLiked) {//先前有赞过才需要操作
-                    likeService.remove(likeQueryWrapper);
+                    likeService.removeFavoriteByVidAndUid(video_id, user_id);
+                    //同步进redis缓存
+                    likeService.reduceLikeCountInRedis(video_id);
                 }
                 responseBuilder.setStatusCode(0);
                 log.info("用户"+user_id+"取消对视频"+video_id+"的点赞");
@@ -98,20 +99,16 @@ public class FavoriteController {
             responseBuilder.setStatusMsg("token验证错误！");
             log.error("已点赞视频拉取:token验证错误！");
         } else {
-            String user_id = request.getParameter("user_id");
+            Long user_id = Long.parseLong(request.getParameter("user_id"));
             //先查询出用户点赞了哪些视频，获取视频id
-            QueryWrapper<Like> likeQueryWrapper = new QueryWrapper<>();
-            likeQueryWrapper.eq("uid", user_id);
-            List<Like> likeList = likeService.list(likeQueryWrapper);
+            List<Like> likeList = likeService.queryUserLikesByUid(user_id);
             //再从视频信息表中获取详细信息
             for (int i = 0; i < likeList.size(); i++) {
                 Like like = likeList.get(i);
 
-                QueryWrapper<Video> videoQueryWrapper = new QueryWrapper<>();
-                videoQueryWrapper.eq("vid", like.getVId());
-                Video video = videoService.getOne(videoQueryWrapper);
+                Video video = videoService.getById(like.getVId());
                 //查询视频作者信息
-                UserMsg user = userMsgService.getOne(new QueryWrapper<UserMsg>().eq("uid", like.getUId()));
+                UserMsg user = userMsgService.getUserMsgByUid(like.getUId());
                 FavoriteList.User.Builder userBuilder = FavoriteList.User.newBuilder();
                 userBuilder.setId(like.getUId());
                 userBuilder.setName(user.getUsername());
@@ -119,14 +116,9 @@ public class FavoriteController {
                 userBuilder.setFollowerCount(user.getFollowerCount());
                 userBuilder.setIsFollow(true);//未完善
                 //查询视频的点赞量和是否已经点赞
-                QueryWrapper<Like> favoriteQuery = new QueryWrapper<>();
-                favoriteQuery.eq("vid", video.getVId());
-                Long favoriteCount=likeService.count(favoriteQuery);
+                Long favoriteCount=likeService.queryFavoriteCountByVid(video.getVId());
 
-                QueryWrapper<Like> isFavoriteQuery=new QueryWrapper<>();
-                isFavoriteQuery.eq("uid", user_id).eq("vid", video.getVId());
-                ;
-                boolean isFavorite = likeService.count(isFavoriteQuery)==1?true:false;
+                boolean isFavorite = likeService.queryIsFavoriteByVidAndUid(video.getVId(), video.getUId());
                 //构建返回视频数据
                 FavoriteList.Video.Builder videoBuilder = FavoriteList.Video.newBuilder();
                 videoBuilder.setId(video.getVId());
@@ -134,7 +126,7 @@ public class FavoriteController {
                 videoBuilder.setPlayUrl(video.getPlayUrl());
                 videoBuilder.setCoverUrl(video.getCoverUrl());
                 videoBuilder.setFavoriteCount(favoriteCount);//已完善
-                videoBuilder.setCommentCount(0);//未完善
+                videoBuilder.setCommentCount(0);//未完善，在此模块中不会显示评论数，因此不必查询
                 videoBuilder.setIsFavorite(isFavorite);//已完善
                 videoBuilder.setTitle(video.getTitle());
 
