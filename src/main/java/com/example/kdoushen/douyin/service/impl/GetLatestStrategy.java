@@ -19,10 +19,15 @@ public class GetLatestStrategy implements Strategy {
     @Value("${video-config.feed-video-max-num}")
     private String VIDEO_MAX_NUM;
 
+    /**
+     * 获取在指定时间后上传的视频，包含指定时间时刻
+     * @param timestamp
+     * @return
+     */
     @Override
     public List<Video> getVideo(Timestamp timestamp) {
         QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-        queryWrapper.gt("publish_time", timestamp).orderByDesc("publish_time")
+        queryWrapper.ge("publish_time", timestamp).orderByDesc("publish_time")
                 .last("limit "+VIDEO_MAX_NUM);
         return videoService.list(queryWrapper);
     }

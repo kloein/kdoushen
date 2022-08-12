@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -118,7 +119,10 @@ public class FeedController {
             countDownLatch.await();
             responseBuilder.setStatusCode(0);
             if (videoList.size() > 0) {
-                responseBuilder.setNextTime(videoList.get(videoList.size()-1).getPublishTime().getTime());
+                responseBuilder.setNextTime(videoList.get(videoList.size() - 1).getPublishTime().getTime());
+            } else {
+                //否则设置下次返回七天内的视频，此行仅方便开发测试有用
+                responseBuilder.setNextTime(System.currentTimeMillis()-7*24*60*60*1000);
             }
             log.info("feed:拉取视频成功");
         }

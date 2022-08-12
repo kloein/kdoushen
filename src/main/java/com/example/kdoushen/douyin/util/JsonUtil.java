@@ -1,10 +1,12 @@
 package com.example.kdoushen.douyin.util;
 
+import com.google.gson.GsonBuilder;
 import com.google.protobuf.GeneratedMessageV3.Builder;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.converter.json.GsonBuilderUtils;
 
 public class JsonUtil {
     private static final Logger log= LoggerFactory.getLogger(JsonUtil.class);

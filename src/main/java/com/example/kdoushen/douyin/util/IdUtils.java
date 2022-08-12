@@ -7,7 +7,7 @@ public class IdUtils {
     private static IdentifierGenerator IDENTIFIER_GENERATOR = new DefaultIdentifierGenerator();
 
     /**
-     * 获取唯一ID
+     * 通过雪花算法获取唯一ID
      *
      * @return id
      */
