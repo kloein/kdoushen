@@ -6,11 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 @Data
 @TableName("t_comment")
-public class Comment {
+public class Comment implements Serializable {
     @TableId()
     private Long id;
 

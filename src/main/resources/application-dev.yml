@@ -3,9 +3,9 @@ video-config:
   ##Server地址前缀
   server-path: http:\\192.168.1.105:6001\
   ##视频保存路径
-  video-save-path: static/videos
+  video-save-path: videos
   ##视频封面保存路径
-  video-cover-save-path: static/covers
+  video-cover-save-path: covers
   ##配置封面截取第几帧
   frame-num: 1
   ##feed流至多返回多少条视频
@@ -24,6 +24,15 @@ spring:
   redis:
     host: localhost
     port: 6379
+
+  activemq:
+    broker-url: tcp://43.142.182.184:61616
+    user: admin
+    password: rzs.701
+    pool:
+      enabled: true
+      max-connections: 10
+
 
 server:
   port: 6001

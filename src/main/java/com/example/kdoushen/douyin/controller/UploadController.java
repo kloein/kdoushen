@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
@@ -56,7 +58,7 @@ public class UploadController {
      */
     @PostMapping("/douyin/publish/action/")
     @ResponseBody
-    public String upload(MultipartFile data, HttpServletRequest request) throws IOException, FrameGrabber.Exception {
+    public String upload(MultipartFile data, HttpServletRequest request, HttpSession session) throws IOException, FrameGrabber.Exception {
         Action.douyin_publish_action_response.Builder responseBuilder = Action.douyin_publish_action_response.newBuilder();
         String token = request.getParameter("token");
 
@@ -66,26 +68,39 @@ public class UploadController {
             responseBuilder.setStatusMsg("token非法!");
         } else {
             //获取static文件夹所在路径,在window系统下以/开头要去除
-            String staticPath = ResourceUtils.getURL("classpath:").getPath();
+            /*String staticPath = ResourceUtils.getURL("classpath:").getPath();
             if (SystemUtil.isWindows()) {
                 staticPath=staticPath.substring(1);
-            }
+            }*/
             String title = request.getParameter("title");
             //通过token获取用户id
             Long userId = Long.parseLong(TokenUtil.getTokenPayload(token, "userId"));
             //生成视频名称
             String filename=UUID.randomUUID().toString();
             //保存视频进本地
-            String videoTargetPath=staticPath+VIDEO_PATH+ File.separator+filename+DEFAULT_VIDEO_FORMAT;
+            ServletContext servletContext = session.getServletContext();
+            String videosFolderPath = servletContext.getRealPath(VIDEO_PATH);//获取视频文件夹路径
+            File videosFolder=new File(videosFolderPath);
+            if (!videosFolder.exists()) {//如果不存在该文件夹，则创建
+                videosFolder.mkdir();
+            }
+            //String videoTargetPath=staticPath+VIDEO_PATH+ File.separator+filename+DEFAULT_VIDEO_FORMAT;
+            String videoTargetPath=videosFolderPath + File.separator+filename+DEFAULT_VIDEO_FORMAT;
             uploadService.fetchVideoToFile(videoTargetPath, data);
 
             //保存封面进本地
-            String coverTargetPath=staticPath+VIDEO_COVER_PATH+File.separator+filename+DEFAULT_IMG_FORMAT;
+            String coversFolderPath = servletContext.getRealPath(VIDEO_COVER_PATH);//获取封面文件夹路径
+            File coversFolder=new File(coversFolderPath);
+            if (!coversFolder.exists()) {//如果不存在该文件夹则创建
+                coversFolder.mkdir();
+            }
+            //String coverTargetPath=staticPath+VIDEO_COVER_PATH+File.separator+filename+DEFAULT_IMG_FORMAT;
+            String coverTargetPath=coversFolderPath+File.separator+filename+DEFAULT_IMG_FORMAT;
             uploadService.fetchFrameToFile(videoTargetPath, coverTargetPath, FRAME_NUM);
 
             //向mysql中存入视频数据
-            String videoPath=SERVER_PATH+"videos"+File.separator+filename+DEFAULT_VIDEO_FORMAT;
-            String coverPath=SERVER_PATH+"covers"+File.separator+filename+DEFAULT_IMG_FORMAT;
+            String videoPath=SERVER_PATH+VIDEO_PATH+File.separator+filename+DEFAULT_VIDEO_FORMAT;
+            String coverPath=SERVER_PATH+VIDEO_COVER_PATH+File.separator+filename+DEFAULT_IMG_FORMAT;
             videoService.saveVideoMsg(userId, videoPath, coverPath, title);
             //返回成功
             responseBuilder.setStatusCode(0);

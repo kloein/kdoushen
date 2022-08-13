@@ -7,9 +7,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import org.springframework.stereotype.Repository;
 
+import java.io.Serializable;
+
 @Data
 @TableName("t_like")
-public class Like {
+public class Like implements Serializable {
+    private static final long serialVersionUID = 92389146732922971L;
     @TableId("id")
     private Long id;
 

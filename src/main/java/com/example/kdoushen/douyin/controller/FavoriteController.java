@@ -14,11 +14,13 @@ import com.example.kdoushen.douyin.util.TokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.jms.Queue;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -35,6 +37,15 @@ public class FavoriteController {
 
     @Autowired
     UserMsgService userMsgService;
+
+    @Autowired
+    JmsMessagingTemplate jmsMessagingTemplate;
+
+    @Autowired
+    private Queue favoriteQueue;
+
+    @Autowired
+    private Queue removeFavoriteQueue;
 
     /**
      * 点赞操作
@@ -62,7 +73,9 @@ public class FavoriteController {
                     Like like = new Like();
                     like.setUId(user_id);
                     like.setVId(video_id);
-                    likeService.save(like);
+                    //likeService.save(like);
+                    //用消息队列储存到DB
+                    jmsMessagingTemplate.convertAndSend(favoriteQueue, like);
                     //同步进redis缓存
                     likeService.addLikeCountInRedis(video_id);
                 }
@@ -70,7 +83,9 @@ public class FavoriteController {
                 log.info("用户"+user_id+"对视频"+video_id+"点赞");
             } else if (action_type.equals("2") ) {
                 if (hasLiked) {//先前有赞过才需要操作
-                    likeService.removeFavoriteByVidAndUid(video_id, user_id);
+                    //likeService.removeFavoriteByVidAndUid(video_id, user_id);
+                    //通过消息队列取消
+                    jmsMessagingTemplate.convertAndSend(removeFavoriteQueue, video_id+":"+user_id);
                     //同步进redis缓存
                     likeService.reduceLikeCountInRedis(video_id);
                 }

@@ -13,11 +13,13 @@ import com.example.kdoushen.douyin.util.TokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.jms.Queue;
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -35,6 +37,13 @@ public class CommentController {
     CommentService commentService;
     @Autowired
     UserMsgService userMsgService;
+
+    @Autowired
+    JmsMessagingTemplate jmsMessagingTemplate;
+    @Autowired
+    Queue commentQueue;
+    @Autowired
+    Queue removeCommentQueue;
 
     /**
      * 登录用户对视频进行评论
@@ -74,8 +83,10 @@ public class CommentController {
                 comment.setVid(video_id);
                 comment.setCommentText(comment_text);
                 LocalDateTime now = LocalDateTime.now();
-                comment.setCommentTime(new Timestamp(now.toInstant(ZoneOffset.of("+8")).toEpochMilli()));
-                commentService.save(comment);
+                comment.setCommentTime(new Timestamp(now.toInstant(ZoneOffset.of("+0")).toEpochMilli()));
+                //commentService.save(comment);
+                //用消息队列储存到DB
+                jmsMessagingTemplate.convertAndSend(commentQueue, comment);
                 //封装评论信息
                 CommentAction.Comment.Builder commentBuilder = CommentAction.Comment.newBuilder();
                 commentBuilder.setId(comment_id);
@@ -93,7 +104,9 @@ public class CommentController {
                 String comment_id = request.getParameter("comment_id");
                 commentService.removeById(comment_id);
                 //同步进redis缓存
-                commentService.reduceCommentCountInRedis(video_id);
+                //commentService.reduceCommentCountInRedis(video_id);
+                //通过消息队列来删除
+                jmsMessagingTemplate.convertAndSend(removeCommentQueue, comment_id);
             }
             responseBuilder.setStatusCode(0);
         }

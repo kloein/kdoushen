@@ -8,6 +8,7 @@
         <version>2.7.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+    <packaging>jar</packaging>
     <groupId>com.example</groupId>
     <artifactId>kdoushen</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -123,6 +124,22 @@
             <artifactId>javacv</artifactId>
             <version>0.8</version>
         </dependency>
+        <!--<dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv</artifactId>
+            <version>1.5.6</version>
+        </dependency>-->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacpp</artifactId>
+            <version>0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>ffmpeg-platform</artifactId>
+            <version>4.4-1.5.6</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

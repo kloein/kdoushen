@@ -4,17 +4,20 @@ import com.example.kdoushen.douyin.service.UploadService;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+//import java.awt.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 public class UploadServiceImpl implements UploadService {
@@ -22,11 +25,12 @@ public class UploadServiceImpl implements UploadService {
     private static final String DEFAULT_IMG_FORMAT = "jpg";
     @Override
     public void fetchVideoToFile(String videoTargetFile, MultipartFile data) throws IOException {
-        File file = new File(videoTargetFile);
-        file.createNewFile();
-        FileOutputStream fileOutputStream = new FileOutputStream(file);
-        fileOutputStream.write(data.getBytes());
-        fileOutputStream.close();
+//        File file = new File(videoTargetFile);
+//        file.createNewFile();
+//        FileOutputStream fileOutputStream = new FileOutputStream(file);
+//        fileOutputStream.write(data.getBytes());
+//        fileOutputStream.close();
+        data.transferTo(new File(videoTargetFile));
         log.info("视频存入成功："+videoTargetFile);
     }
 
@@ -37,7 +41,7 @@ public class UploadServiceImpl implements UploadService {
             FFmpegFrameGrabber ff = new FFmpegFrameGrabber(videoFile);
             ff.start();
             int length = ff.getLengthInFrames();
-            /*第几帧判断设置*/
+            //*第几帧判断设置*//*
             if (frameNum < 0) {
                 frameNum = 0;
             }
@@ -73,6 +77,7 @@ public class UploadServiceImpl implements UploadService {
             throw new RuntimeException("转换视频图片异常");
         }
     }
+
 
     /**
      * 将图片顺时针旋转90度（通过交换图像的整数像素RGB 值）
