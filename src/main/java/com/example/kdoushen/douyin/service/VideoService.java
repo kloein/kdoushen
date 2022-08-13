@@ -17,7 +17,7 @@ public interface VideoService extends IService<Video> {
     public void saveVideoMsg(Long uid,String playUrl,String coverUrl,String title);
 
     /**
-     * 根据用户id获取其发布的视频
+     * 根据用户id获取其发布的视频,先从redis查，再从DB查
      */
     public List<Video> getUserVideosByUid(long uid);
 }

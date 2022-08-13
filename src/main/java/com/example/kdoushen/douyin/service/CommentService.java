@@ -8,21 +8,21 @@ import java.util.List;
 
 public interface CommentService extends IService<Comment> {
     /**
-     * 通过视频id获取评论数量,先通过redis查询，查询不到在从DB查询
+     * 通过视频id获取评论数量,先通过redis查询，查询不到再从DB查询
      */
     public long queryCommentCountByVid(long vid);
 
     /**
-     * 通过视频id获取其评论,发布时间晚的在前
+     * 通过视频id获取其评论,发布时间晚的在前，先从redis查，再从DB查
      */
     public List<Comment> queryCommentsByVid(long vid);
 
     /**
-     * 评论是将redis中评论数+1（如果redis中存在的画）
+     * 评论是将redis中评论数+1（如果redis中存在的话）
      */
     public void addCommentCountInRedis(long vid);
     /**
-     * 评论是将redis中评论数-1（如果redis中存在的画）
+     * 评论是将redis中评论数-1（如果redis中存在的话）
      */
     public void reduceCommentCountInRedis(long vid);
 

@@ -25,11 +25,11 @@ public interface LikeService extends IService<Like> {
     public List<Like> queryUserLikesByUid(long uid);
 
     /**
-     * 评论是将redis中点赞数+1（如果redis中存在的画）
+     * 评论是将redis中点赞数+1（如果redis中存在的话）
      */
     public void addLikeCountInRedis(long vid);
     /**
-     * 评论是将redis中点赞数-1（如果redis中存在的画）
+     * 评论是将redis中点赞数-1（如果redis中存在的话）
      */
     public void reduceLikeCountInRedis(long vid);
 }

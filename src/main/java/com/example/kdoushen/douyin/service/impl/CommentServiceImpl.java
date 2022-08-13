@@ -40,9 +40,19 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public List<Comment> queryCommentsByVid(long vid) {
-        QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<Comment>().
-                eq("vid", vid).orderByDesc("comment_time");
-        return list(commentQueryWrapper);
+        String redisKey="commentList:"+vid;
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        List<Comment> redisList = (List<Comment>) valueOperations.get(redisKey);
+        //redis查不到从DB
+        if (redisList==null) {
+            QueryWrapper<Comment> commentQueryWrapper = new QueryWrapper<Comment>().
+                    eq("vid", vid).orderByDesc("comment_time");
+            List<Comment> commentList = list(commentQueryWrapper);
+            //将查询结果放入redis缓存
+            valueOperations.set(redisKey, commentList, timeout, TimeUnit.SECONDS);
+            return commentList;
+        }
+        return redisList;
     }
 
     @Override

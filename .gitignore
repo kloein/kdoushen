@@ -1,7 +1,6 @@
 HELP.md
 target/
-videos/
-covers/
+
 
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -15,6 +14,9 @@ covers/
 .settings
 .springBeans
 .sts4-cache
+
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
 
 ### IntelliJ IDEA ###
 .idea
