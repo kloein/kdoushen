@@ -101,6 +101,7 @@ public class UploadController {
             //向mysql中存入视频数据
             String videoPath=SERVER_PATH+VIDEO_PATH+File.separator+filename+DEFAULT_VIDEO_FORMAT;
             String coverPath=SERVER_PATH+VIDEO_COVER_PATH+File.separator+filename+DEFAULT_IMG_FORMAT;
+            //coverPath="https://t7.baidu.com/it/u=4162611394,4275913936&fm=193&f=GIF";
             videoService.saveVideoMsg(userId, videoPath, coverPath, title);
             //返回成功
             responseBuilder.setStatusCode(0);

@@ -61,7 +61,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         ValueOperations<String,Integer> valueOperations = redisTemplate.opsForValue();
         Integer cnt = valueOperations.get(redisKey);
         if (cnt != null) {
-            valueOperations.set(redisKey, cnt+1);
+            valueOperations.set(redisKey, cnt+1,timeout, TimeUnit.SECONDS);
         }
     }
 
@@ -71,7 +71,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         ValueOperations<String,Integer> valueOperations = redisTemplate.opsForValue();
         Integer cnt = valueOperations.get(redisKey);
         if (cnt != null) {
-            valueOperations.set(redisKey, cnt+1);
+            valueOperations.set(redisKey, cnt+1,timeout, TimeUnit.SECONDS);
         }
     }
 }

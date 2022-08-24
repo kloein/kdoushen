@@ -66,7 +66,7 @@ public class LikeServiceImpl extends ServiceImpl<LikeMapper, Like> implements Li
         ValueOperations<String,Integer> valueOperations = redisTemplate.opsForValue();
         Integer cnt = valueOperations.get(redisKey);
         if (cnt != null) {
-            valueOperations.set(redisKey, cnt+1);
+            valueOperations.set(redisKey, cnt+1, timeOut, TimeUnit.SECONDS);
         }
     }
 
@@ -76,7 +76,7 @@ public class LikeServiceImpl extends ServiceImpl<LikeMapper, Like> implements Li
         ValueOperations<String,Integer> valueOperations = redisTemplate.opsForValue();
         Integer cnt = valueOperations.get(redisKey);
         if (cnt != null) {
-            valueOperations.set(redisKey, cnt-1);
+            valueOperations.set(redisKey, cnt-1, timeOut, TimeUnit.SECONDS);
         }
     }
 }
